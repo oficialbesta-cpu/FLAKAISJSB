@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IA Gemini 2.5 Flash</title>
+<style>
+    body {
+        background: #111;
+        color: #fff;
+        font-family: Arial, sans-serif;
+        padding: 20px;
+    }
+
+    #resposta {
+        margin-top: 20px;
+        padding: 15px;
+        background: #222;
+        border-radius: 10px;
+        white-space: pre-wrap;
+    }
+
+    #copiarBtn {
+        margin-top: 10px;
+        display: none;
+        padding: 10px 18px;
+        border: none;
+        border-radius: 10px;
+        background: #4CAF50;
+        color: white;
+        cursor: pointer;
+    }
+
+    input, button {
+        padding: 10px;
+        border-radius: 8px;
+        border: none;
+    }
+
+    #enviar {
+        background: #0af;
+        color: #000;
+        cursor: pointer;
+    }
+</style>
+</head>
+<body>
+
+<h2>Gemini 2.5 Flash – Seu Site IA</h2>
+
+<input id="texto" type="text" placeholder="Digite sua mensagem..." style="width: 80%;">
+<button id="enviar">Enviar</button>
+
+<div id="resposta"></div>
+<button id="copiarBtn">Copiar código</button>
+
+<script>
+    const API_KEY = "SUA_API_AQUI"; // Coloque sua chave aqui
+
+    async function enviarMsg() {
+        const texto = document.getElementById("texto").value;
+        const respostaBox = document.getElementById("resposta");
+        const copiarBtn = document.getElementById("copiarBtn");
+
+        copiarBtn.style.display = "none"; 
+        respostaBox.innerHTML = "Carregando...";
+
+        const r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + API_KEY, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: texto }] }]
+            })
+        });
+
+        const data = await r.json();
+        let mensagem = data.candidates?.[0]?.content?.parts?.[0]?.text || "Erro na resposta.";
+
+        respostaBox.textContent = mensagem;
+
+        // Detecta código automaticamente
+        const temCodigo = mensagem.includes("```") || mensagem.includes("<code");
+
+        if (temCodigo) {
+            copiarBtn.style.display = "block";
+            copiarBtn.onclick = () => copiarCodigo(mensagem);
+        }
+    }
+
+    function copiarCodigo(texto) {
+        // Pega só o código dentro de ```
+        let codigo = texto;
+
+        if (texto.includes("```")) {
+            codigo = texto.split("```")[1].replace(/^[a-zA-Z]+\n/, "");
+        }
+
+        navigator.clipboard.writeText(codigo);
+        alert("Código copiado!");
+    }
+
+    document.getElementById("enviar").onclick = enviarMsg;
+</script>
+
+</body>
+</html>
